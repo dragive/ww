@@ -1,6 +1,6 @@
 #!/usr/bin/python3.8
 import os,sys,random
-PATH='/bin';EDYTOR='vim';folder='/skrypty'
+PATH='/bin';EDYTOR='vim';folder='/skrypty';wersja_pythona='3.8'
 def help():
 	print(	u'''
 		Menadżer skryptów użytkowych w systemie. Można skopiować inne pliki wykonywalne, nie tylko skomponowane w pythonie, ponieważ będzie załączany do wykonania interpreter.
@@ -21,14 +21,14 @@ def help():
 ''')
 	exit()
 szab2=\
-u'''#!/usr/bin/python3.8
+u'''#!/usr/bin/python'''+wersja_pythona+'''
 #wywołana zostanie funkcja main(), więc w niej zacznij umiesczać odwołania do funkcji
 def main():
 	pass # domyślnie nie wykonuje nic
 
 '''
 szab1=\
-u'''#!/usr/bin/python3.8
+u'''#!/usr/bin/python'''+wersja_pythona+'''
 def main():
 	import sys,os
 	os.system('ww -r '+sys.argv[0])
@@ -125,5 +125,3 @@ if __name__=='__main__':
 		se()
 	main()
 	
-
-
