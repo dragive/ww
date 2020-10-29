@@ -1,6 +1,6 @@
 #!/usr/bin/python3.8
 import os,sys,random
-PATH='/bin';EDYTOR='vim';folder='/skrypty';wersja_pythona='3.8'
+PATH='/usr/bin';EDYTOR='vim';folder='/skrypty';wersja_pythona='3.8'
 def help():
 	print(	u'''
 		Menadżer skryptów użytkowych w systemie. Można skopiować inne pliki wykonywalne, nie tylko skomponowane w pythonie, ponieważ będzie załączany do wykonania interpreter.
@@ -40,11 +40,12 @@ def ls(c=''):
 def se():
 	os.system('sudo '+EDYTOR+' '+sys.argv[0])
 def edit(name):
+	print(PATH+folder+name)
 	if name==sys.argv[0]:
 		if not 'n'==input(u'Chcesz edytować plik główny menadżera skryptów? [Y/n]'):
-			os.system('sudo '+EDYTOR+' '+PATH+'/'+name)
+			os.system('sudo '+EDYTOR+' '+PATH+'/'+name.split('/')[-1])
 	elif name in ls(folder):
-		os.system('sudo '+EDYTOR+' '+PATH+folder+'/'+name)
+		os.system('sudo '+EDYTOR+' '+folder+'/'+name.split('/')[-1])
 	else:
 		print(u'Wygląda na to, że nie ma takiego pliku który chcesz edytować. :/')
 		if not 'n'==input(u'Może chcesz go stworzyć? [Y/n]'):
@@ -86,7 +87,7 @@ def python(name):
 	else:
 		print(u'Kopiuję',end='')
 		if False:
-			os.system('sudo echo > '+PATH+folder+'/'+name+'&& sudo chmod +x '+PATH+folder+'/'+name)
+			os.system('sudo echo > '+folder+'/'+name+'&& sudo chmod +x '+folder+'/'+name)
 			with open(PATH+folder+'/'+name,'w') as w:
 				w.write(szab2)
 		else:
@@ -108,20 +109,58 @@ def run(name):
 			python(name)
 		return None
 	
-	os.system(PATH+folder+'/./'+name+' '+' '.join(sys.argv[3:]))
+	os.system(folder+'/'+name.split('/')[4]+' '.join(sys.argv[3:]))
+
+def self_install():
+	local_dir = os.path.abspath(__file__)
+	if local_dir.split('/')[1:3] == ['usr','bin']:
+		print(u"Program już zainstalowany.")
+		exit()
+	else:
+		print('a')
+		os.system('sudo cp '+local_dir+' '+PATH+'/ww')
+		os.system('sudo mkdir '+PATH+folder)
+		from getpass import getuser
+		os.system('sudo ww --finish_installation '+getuser())
+	print(folder)
+	print(PATH)
+	print(os.path.abspath(__file__))
+	'''
+	1. zczytanie lokalizacji, gdy inna niż bin i nie ma tam pliku to przekopiowanie
+	utworzenie /bin/skrypty
+	3. przekopiowanie szab1.ww szab2.ww
+	'''
+def finish_installation():
+	print('b')
+	with open(PATH+folder+'/szab1.ww','w+') as o:
+		o.write(szab1)
+	
+	with open(PATH+folder+'/szab2.ww','w+') as o:
+		o.write(szab2)
+
+	os.system("chmod +x "+PATH+folder+'/* ')
+		
 def main():
 	if len(sys.argv)==1:
 		print(u"Nie zdefiniowano dokładnie działania, użyj -h po więcej informacji.")
 		quit()
 	if len(sys.argv)==2 and (sys.argv[1]=='-n' or sys.argv[1]=='-r' or sys.argv[1]=='-e' or sys.argv[1]=='-p' or sys.argv[1]=='-d'):
-		print(u'Źle podaneargumenty wywołąnia!');quit()
+		print(u'Źle podane argumenty wywołania!');quit()
 	elif len(sys.argv)>2:
 		{'-e':edit,'-n':create,'-d':remo,'-p':python,'-r':run,'-cat':cat}[sys.argv[1]](sys.argv[2])
 if __name__=='__main__':
+
 	if sys.argv.count('-h'):
 		help()
 		exit()
 	if sys.argv.count('-s'):
 		se()
+	if sys.argv.count('-i'):
+		self_install()
+		exit()
+	if sys.argv.count('--finish_installation'):
+		finish_installation()
+		exit()
 	main()
+	
 	
