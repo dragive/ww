@@ -1,0 +1,47 @@
+#!/bin/python3
+
+import os
+import logging 
+logging.basicConfig(filename='main.log', filemode='w',level=logging.DEBUG,format='%(asctime)s -- %(name)s -- %(levelname)s >> %(message)s')
+log = logging.getLogger(f'main.log')
+
+
+class file_menagement:
+    
+    def __init__(self):
+        log.debug("init of fm")
+        self.set_variables()
+    
+    def set_variables(self):
+        log.debug('')
+    @property
+    def getcwd(self):
+        
+        return os.getcwd()
+
+    def mkdir(self,path : str):
+        os.mkdir(path)
+    
+    def cd(self,path : str):
+        os.chdir(path)
+    
+class subprograms:
+    def __init__(self):
+        pass
+
+
+def main():
+    pass
+
+    
+    
+
+
+if __name__=="__main__":
+    try:
+        log.debug('starting main')
+        main()
+        log.debug('exit main')
+    except Exception as e:
+        print(e)
+        
