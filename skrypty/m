@@ -1,8 +1,0 @@
-#!/usr/bin/python3.7
-import os,sys
-if not (len(sys.argv)-1):
-	os.system('cmatrix -b')
-else:
-	os.system('cmatrix -b')
-	os.system('bash')
-

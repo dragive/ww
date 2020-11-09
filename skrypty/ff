@@ -1,5 +1,0 @@
-#!/usr/bin/python3.7
-import os
-print("FIREFOX: ",end='')
-os.system('firefox 2>/dev/null & ')
-print("DONE")

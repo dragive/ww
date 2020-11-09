@@ -1,9 +1,0 @@
-#!/usr/bin/python3.8
-#wywołana zostanie funkcja main(), więc w niej zacznij umiesczać odwołania do funkcji
-import os,sys
-os.system('/bin/ww -r '+
-
-str(sys.argv[0].split('/')[-1:][0])+' '+
-
-
-' '.join(sys.argv[1:]))
