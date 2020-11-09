@@ -1,0 +1,40 @@
+#!/usr/bin/python3.8
+import os,sys,random
+na1='/home/mfender/.vimrc'
+na2='/home/mfender/.vimrc_c'
+
+def help():
+	print(\
+'''	Zamiana plików w vim słuzączych do konfiguracji .vimrc
+		Edycja polega na zamianie .vimrc i .vimrc_c
+
+	Życzymy miłego użytkowania
+	   DGE
+''',)
+	exit()
+def wart(na):
+	plik=open(na)
+	w=plik.read()
+	plik.close()
+	return w
+
+def zapisz(na,w):
+	plik=open(na,'w')
+	plik.write(w)
+	plik.close()
+
+
+if __name__=='__main__':
+	if sys.argv.count('-h')>0:
+		help()
+		exit()
+	
+
+	w1=wart(na1)
+	w2=wart(na2)
+	try:
+		zapisz(na1,w2)
+		zapisz(na2,w1)
+		print('OK')
+	except:
+		print('ERR[1]')

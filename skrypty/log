@@ -1,0 +1,7 @@
+#!/usr/bin/python3.7
+import os,sys,datetime
+def dd():
+	x=datetime.datetime.now()
+	return (x.year,x.month.x.day,x.hour,x.minute,x.second)
+
+

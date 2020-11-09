@@ -1,0 +1,4 @@
+#!/usr/bin/python3.7
+from os import system
+system('cd ..')# domyślnie nie wykonuje nic
+

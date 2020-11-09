@@ -1,0 +1,9 @@
+#!/usr/bin/python3.7
+print('1')
+from sys import argv
+from os import system
+	if not len(argv) == 1:
+		system('echo > '+' '.join(argv[1:]))
+	else:
+		print("\031m93Nie ma takiego polecenia!!!\033m0")
+pass

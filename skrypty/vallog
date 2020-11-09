@@ -1,0 +1,29 @@
+#!/usr/bin/python3.8
+import sys
+import re
+ex='TODO'
+argv=sys.argv
+if len(argv) <=1:
+	print(u"Nie podano lokalizacji  pliku do validacji logów! Podaj go w argumentach")
+	exit()
+'''
+if None != (0,3):
+	print("@")
+
+'''
+
+def validation(name_of_file: str):
+	
+	try:
+		with open(name_of_file,'r') as o:
+			lines=o.read().split('\n')
+	except FileNotFoundError as exeption:
+		print(u"Nie znalezniono pliku o nazwie {0}!".format(name_of_file))
+		exit()
+	for no, line in enumerate(lines):
+		if  re.search(ex,line) is not None:
+			print(str(no)+"\t"+line)
+
+
+for i in argv[1:]:
+	validation(i)

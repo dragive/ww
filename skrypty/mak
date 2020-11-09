@@ -1,0 +1,4 @@
+#!/usr/bin/python3.7
+from os import system
+from sys import argv
+system('make '+ argv[1]+' && ./'+argv[1])
