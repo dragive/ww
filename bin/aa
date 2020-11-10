@@ -2,6 +2,8 @@
 
 import os
 import logging 
+import subprocess as subp
+import json
 logging.basicConfig(filename='main.log', filemode='w',level=logging.DEBUG,format='%(asctime)s -- %(name)s -- %(levelname)s >> %(message)s')
 log = logging.getLogger(f'main.log')
 
@@ -13,7 +15,7 @@ class file_menagement:
         self.set_variables()
     
     def set_variables(self):
-        log.debug('')
+        log.debug('setting variables')
     @property
     def getcwd(self):
         
@@ -24,14 +26,59 @@ class file_menagement:
     
     def cd(self,path : str):
         os.chdir(path)
-    
-class subprograms:
+    @staticmethod
+    def readfile(name : str):
+        log.debug(f'readfile method start')
+        try:
+            with open(name) as op:
+               val = op.read()
+        except Exception as ex:
+            log.error(ex)
+            raise ex
+        return val
+
+class settings:
     def __init__(self):
+        log.debug(f'settings init')
+        self.file_name='settings.json'
+        try:
+            self.load_dict_settings_from_str()
+        except Exception as e:
+            log.info(e)
+            
+    def load_dict_settings_from_str(self):
+        try:
+            value=file_menagement.readfile(self.file_name)
+        except Exception as ex:
+            log.info(ex)
+            raise ex
+        settings=json.dumps(value)
+
+
+    def save_settings(self):
         pass
+class subprogram:
+    def __init__(self):
+        self.init_variables()
+        self.dir_basic = '/bin/'
+        self.dir_scripts=f'{self.dir_basic}/skrypty/'
 
+    def init_variables(self):
+        log.debug('init variables subprogram')
+        self.template_req='\n'.join(['''#!/usr/bin/python3''','''#import os,sys''',f'''os.system('/bin/aa -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
+        self.template_example='\n'.join(['#!/usr/bin/python3','#place here python code'])
 
+    def run_subprogram(self,name : str):
+        try:
+            subp.call([f'{self.dir_scripts}./{name}'])
+        except Exception as ex:
+            log.error(ex)
+            raise ex
+    
 def main():
-    pass
+    log.debug('main')
+    sp = subprogram()
+    sp.run_subprogram('c')
 
     
     
