@@ -4,9 +4,13 @@ import os
 import logging 
 import subprocess as subp
 import json
+from enum import Enum
 logging.basicConfig(filename='main.log', filemode='w',level=logging.DEBUG,format='%(asctime)s -- %(name)s -- %(levelname)s >> %(message)s')
 log = logging.getLogger(f'aa')
 
+class Mode(Enum):
+    NONE = None
+    FORCE = 'FORCE'
 
 class file_management:
     def __init__(self):
@@ -35,8 +39,10 @@ class file_management:
             log.error(ex)
             raise ex
         return val
+    def is_existing(self,name_of_file : str,localization : str)-> bool:
+        return os.path.exists(f'{localization}{name_of_file}')
 
-class settings:
+class Settings:
     def __init__(self):
         log.debug(f'settings init')
         self.settings={}
@@ -68,27 +74,53 @@ class settings:
 
 class subprogram:
     def __init__(self):
-        self.init_variables()
+        #self.init_variables()
         self.dir_basic = '/bin/'
         self.dir_scripts=f'{self.dir_basic}/skrypty/'
+        self.name_of_program = 'aa'
 
-    def init_variables(self):
+    #def init_variables(self):
         log.debug('init variables subprogram')
-        self.template_req='\n'.join(['''#!/usr/bin/python3''','''#import os,sys''',f'''os.system('/bin/aa -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
+        self.template_req='\n'.join(['#!/usr/bin/python3','#import os,sys',f'''os.system('{self.dir_basic}{self.name_of_program} -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
         self.template_example='\n'.join(['#!/usr/bin/python3','#place here python code'])
 
     def run(self,name : str):
         try:
+            log.info(f'try to run {name} script at {self.dir_scripts}')
             self.execute_system_cmd([f'{self.dir_scripts}./{name}'])
         except Exception as ex:
             log.error(ex)
             raise ex
+    def create_file(self,name : str,path :str,mode:Mode=Mode.NONE):
+        
+        fm = file_management()
+        if fm.is_existing(name,path):
+            if mode == Mode.NONE:
+                log.error(f'file existing: {path}, Name of script: {name}')
+                raise Exception(f'file existing: {path}, Name of script: {name}')
+            if not mode == Mode.FORCE:
+                log.debug(f'Stoped creating file due to not force mode')
+                raise Exception('Stoped creating file due to not force mode')
+        
+        with open(f'{path}{name}','w+') as file:
+            file.read()
+    def create_dir(self):
+        #TODO
+        pass
+    def create_new_req_script(self,name:str,path:str):
+        self.create_file(name,self.dir_basic)
+
+        with open(f'{path}{name}', 'w') as file:
+            file.write(self.template_req) 
+
+
     @staticmethod
     def execute_system_cmd(cmd : str):
         try:
+            log.debug(f'trying to execute system command: {cmd}')
             subp.call(cmd)
         except Exception as ex:
-            log.error(f'execute ssytem cmd error : {ex}')
+            log.error(f'execute system cmd error : {ex}')
             raise ex
     
 class basic_fun:
@@ -96,7 +128,7 @@ class basic_fun:
     def parse_args():
         import argparse
         ap = argparse.ArgumentParser()
-        
+        sprogr = subprogram()
         
         ap.add_argument(
             '-n','--create', type=str, required=False,
@@ -115,10 +147,13 @@ class basic_fun:
         
         args=ap.parse_args()
 
-        print(f'#{args.create}#')
-        print(f'#{args.name_of_program}#')
-        print(f'#{args.install}#')
-        
+        if not args.run is None:
+            sprogr.run(args.run)
+
+        elif not args.create is None:
+            name=args.create
+            
+            sprogr.create_new_req_script(name,sprogr.dir_basic)
         
 
 
@@ -131,9 +166,6 @@ def main():
     #sp.run('c')
 
     
-    
-
-
 if __name__=="__main__":
     try:
         log.debug('starting main')
@@ -141,4 +173,5 @@ if __name__=="__main__":
         log.debug('exit main')
     except Exception as e:
         print(e)
-        
+
+
