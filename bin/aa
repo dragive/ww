@@ -5,20 +5,18 @@ import logging
 import subprocess as subp
 import json
 logging.basicConfig(filename='main.log', filemode='w',level=logging.DEBUG,format='%(asctime)s -- %(name)s -- %(levelname)s >> %(message)s')
-log = logging.getLogger(f'main.log')
+log = logging.getLogger(f'aa')
 
 
-class file_menagement:
-    
+class file_management:
     def __init__(self):
         log.debug("init of fm")
         self.set_variables()
-    
+        self.current_dir=self.getcwd
     def set_variables(self):
         log.debug('setting variables')
     @property
     def getcwd(self):
-        
         return os.getcwd()
 
     def mkdir(self,path : str):
@@ -26,11 +24,12 @@ class file_menagement:
     
     def cd(self,path : str):
         os.chdir(path)
+
     @staticmethod
-    def readfile(name : str):
+    def readfile(name : str,mode ='w'):
         log.debug(f'readfile method start')
         try:
-            with open(name) as op:
+            with open(name,mode) as op:
                val = op.read()
         except Exception as ex:
             log.error(ex)
@@ -40,23 +39,33 @@ class file_menagement:
 class settings:
     def __init__(self):
         log.debug(f'settings init')
+        self.settings={}
         self.file_name='settings.json'
         try:
             self.load_dict_settings_from_str()
         except Exception as e:
             log.info(e)
+        
+        self.default_settings={
+            'file_name': 'settings.json'
+        }
             
-    def load_dict_settings_from_str(self):
+    def load_dict_settings_from_str(self) -> dict:
         try:
-            value=file_menagement.readfile(self.file_name)
+            value=file_management.readfile(self.file_name)
         except Exception as ex:
             log.info(ex)
             raise ex
-        settings=json.dumps(value)
+        self.loaded_settings = json.dumps(value)
+    
+    @staticmethod
+    def settings_validation(dict_settings : dict) -> bool:
+        return True
 
+    def apply_settings(self):
+        for s in self.default_settings:
+            self.settings[s] = self.loaded_settings[s] if s in self.loaded_settings else self.default_settings[s]
 
-    def save_settings(self):
-        pass
 class subprogram:
     def __init__(self):
         self.init_variables()
@@ -68,17 +77,58 @@ class subprogram:
         self.template_req='\n'.join(['''#!/usr/bin/python3''','''#import os,sys''',f'''os.system('/bin/aa -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
         self.template_example='\n'.join(['#!/usr/bin/python3','#place here python code'])
 
-    def run_subprogram(self,name : str):
+    def run(self,name : str):
         try:
-            subp.call([f'{self.dir_scripts}./{name}'])
+            self.execute_system_cmd([f'{self.dir_scripts}./{name}'])
         except Exception as ex:
             log.error(ex)
             raise ex
+    @staticmethod
+    def execute_system_cmd(cmd : str):
+        try:
+            subp.call(cmd)
+        except Exception as ex:
+            log.error(f'execute ssytem cmd error : {ex}')
+            raise ex
     
+class basic_fun:
+    @staticmethod
+    def parse_args():
+        import argparse
+        ap = argparse.ArgumentParser()
+        
+        
+        ap.add_argument(
+            '-n','--create', type=str, required=False,
+            help="create new script", default=''
+        )
+        ap.add_argument(
+            '-r','--run', type=str, required=False, dest = "name_of_program",
+            help="run specyfied script", default=''
+        )
+        ap.add_argument(
+            '--install', required=False, action='store_true',
+            help="install this program in system directory"
+        )
+
+        log.debug('parsing args')
+        
+        args=ap.parse_args()
+
+        print(f'#{args.create}#')
+        print(f'#{args.name_of_program}#')
+        print(f'#{args.install}#')
+        
+        
+
+
 def main():
     log.debug('main')
-    sp = subprogram()
-    sp.run_subprogram('c')
+    basic_fun.parse_args()
+
+    
+    #sp = subprogram()
+    #sp.run('c')
 
     
     
