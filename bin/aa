@@ -17,13 +17,16 @@ class file_management:
         log.debug("init of fm")
         self.set_variables()
         self.current_dir=self.getcwd
+
     def set_variables(self):
         log.debug('setting variables')
+    
     @property
     def getcwd(self):
         return os.getcwd()
-
-    def mkdir(self,path : str):
+    
+    @staticmethod
+    def mkdir(path : str):
         os.mkdir(path)
     
     def cd(self,path : str):
@@ -39,8 +42,16 @@ class file_management:
             log.error(ex)
             raise ex
         return val
-    def is_existing(self,name_of_file : str,localization : str)-> bool:
+
+    def is_existing(self,localization : str,name_of_file : str)-> bool:
         return os.path.exists(f'{localization}{name_of_file}')
+    
+    def is_dir(self,path:str,name:str)-> bool:
+        return (self.is_existing(path,name) and os.path.isdir(f'{path}/{name}'))
+
+    def is_file(self, path:str,name:str) -> bool:
+        return (self.is_existing(path,name) and os.path.isfile(f'{path}/{name}'))
+
 
 class Settings:
     def __init__(self):
@@ -91,10 +102,11 @@ class subprogram:
         except Exception as ex:
             log.error(ex)
             raise ex
+
     def create_file(self,name : str,path :str,mode:Mode=Mode.NONE):
-        
+        log.debug(f'creating file, name: {name}, path:{path}, mode{mode}')
         fm = file_management()
-        if fm.is_existing(name,path):
+        if fm.is_existing(path,name):
             if mode == Mode.NONE:
                 log.error(f'file existing: {path}, Name of script: {name}')
                 raise Exception(f'file existing: {path}, Name of script: {name}')
@@ -104,9 +116,22 @@ class subprogram:
         
         with open(f'{path}{name}','w+') as file:
             file.read()
-    def create_dir(self):
-        #TODO
-        pass
+
+    def create_dir(self,path :str,name:str):
+        fm=file_management()
+        if fm.is_existing(path,name):
+            if not fm.is_dir(path,name):
+                log.error(f'at path and name (path: {path}, name: {name})')
+                raise Exception(f'at path and name (path: {path}, name: {name})')
+            else:
+                log.info(f"skipped creating dir due to existing one at {path}/{name}")
+        else:
+            try:
+                os.makedirs(f'{path}/{name}',exist_ok=False)
+            except Exception as ex:
+                log.error(ex)
+                raise ex
+
     def create_new_req_script(self,name:str,path:str):
         self.create_file(name,self.dir_basic)
 
@@ -123,7 +148,14 @@ class subprogram:
             log.error(f'execute system cmd error : {ex}')
             raise ex
     
-class basic_fun:
+
+class main_program:
+    
+    @staticmethod
+    def main():
+        log.debug(f'started main at main_program')
+        main_program.parse_args()
+
     @staticmethod
     def parse_args():
         import argparse
@@ -144,7 +176,6 @@ class basic_fun:
         )
 
         log.debug('parsing args')
-        
         args=ap.parse_args()
 
         if not args.run is None:
@@ -152,26 +183,17 @@ class basic_fun:
 
         elif not args.create is None:
             name=args.create
-            
             sprogr.create_new_req_script(name,sprogr.dir_basic)
         
-
-
-def main():
-    log.debug('main')
-    basic_fun.parse_args()
-
-    
-    #sp = subprogram()
-    #sp.run('c')
 
     
 if __name__=="__main__":
     try:
         log.debug('starting main')
-        main()
+        main_program.main()
         log.debug('exit main')
     except Exception as e:
+        log.error(e)
         print(e)
 
 
