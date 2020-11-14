@@ -7,12 +7,15 @@ import json
 from enum import Enum
 logging.basicConfig(filename='main.log', filemode='w',level=logging.DEBUG,format='%(asctime)s -- %(name)s -- %(levelname)s >> %(message)s')
 log = logging.getLogger(f'aa')
+settings = {}
 
 class Mode(Enum):
     NONE = None
     FORCE = 'FORCE'
+    ASK = 'ASK'
 
 class file_management:
+
     def __init__(self):
         log.debug("init of fm")
         self.set_variables()
@@ -33,7 +36,7 @@ class file_management:
         os.chdir(path)
 
     @staticmethod
-    def readfile(name : str,mode ='w'):
+    def readfile(name : str,mode ='r'):
         log.debug(f'readfile method start')
         try:
             with open(name,mode) as op:
@@ -42,6 +45,10 @@ class file_management:
             log.error(ex)
             raise ex
         return val
+
+    def writefile(self,value:str):
+        #TODO
+        pass
 
     def is_existing(self,localization : str,name_of_file : str)-> bool:
         return os.path.exists(f'{localization}{name_of_file}')
@@ -52,46 +59,79 @@ class file_management:
     def is_file(self, path:str,name:str) -> bool:
         return (self.is_existing(path,name) and os.path.isfile(f'{path}/{name}'))
 
-
 class Settings:
+
     def __init__(self):
         log.debug(f'settings init')
-        self.settings={}
+        global settings
+        settings = self.load_settings()
         self.file_name='settings.json'
-        try:
-            self.load_dict_settings_from_str()
-        except Exception as e:
-            log.info(e)
-        
+
+        self.fm = file_management()
+
+    def load_settings(self):
+        global settings
+        if not settings == {}:
+            return 
         self.default_settings={
-            'file_name': 'settings.json'
+            'basic_settings' : '.aa_settings',
+            'file_name' : 'settings.json',
+            'dir_basic' : '/bin/'
         }
-            
-    def load_dict_settings_from_str(self) -> dict:
+        temp_settings={}
+
         try:
-            value=file_management.readfile(self.file_name)
+            temp_settings=self.load_settings_from_file(self.default_settings['basic_settings'])
+        except FileNotFoundError as ex:
+            settings = self.default_settings
+        except Exception as ex:
+            log.error(ex)
+            raise ex
+        else:
+            for s in temp_settings:
+                self.default_settings[s] = temp_settings[s]
+        
+        try:
+            temp_settings=self.load_settings_from_file(settings['file_name'])
+        except FileNotFoundError as ex:
+            pass
+        except Exception as ex:
+            log.error(ex)
+            raise ex
+        else:
+            for s in temp_settings:
+                self.default_settings[s] = temp_settings[s]
+
+
+    def dump_settings_to_file(self,name:str):
+        global settings
+        if name == '' or name is None:
+            log.error("wrong name of file to dump settings")
+            raise Exception("wrong name of file to dump settings")
+        
+        self.fm.writefile( json.dumps(settings))
+
+            
+    def load_settings_from_file(self,name:str) -> dict:
+        try:
+            value=self.fm.readfile(name)
         except Exception as ex:
             log.info(ex)
             raise ex
-        self.loaded_settings = json.dumps(value)
+        return json.loads(value)
     
     @staticmethod
     def settings_validation(dict_settings : dict) -> bool:
         return True
 
-    def apply_settings(self):
-        for s in self.default_settings:
-            self.settings[s] = self.loaded_settings[s] if s in self.loaded_settings else self.default_settings[s]
-
 class subprogram:
     def __init__(self):
-        #self.init_variables()
-        self.dir_basic = '/bin/'
+        global settings
+        log.debug('init subprogram')
+        self.s = Settings()
+        self.dir_basic = settings['dir_basic']
         self.dir_scripts=f'{self.dir_basic}/skrypty/'
         self.name_of_program = 'aa'
-
-    #def init_variables(self):
-        log.debug('init variables subprogram')
         self.template_req='\n'.join(['#!/usr/bin/python3','#import os,sys',f'''os.system('{self.dir_basic}{self.name_of_program} -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
         self.template_example='\n'.join(['#!/usr/bin/python3','#place here python code'])
 
@@ -150,14 +190,14 @@ class subprogram:
     
 
 class main_program:
-    
-    @staticmethod
-    def main():
+    def __init__(self):
+        self.st=Settings()
+    def main(self):
         log.debug(f'started main at main_program')
-        main_program.parse_args()
+        self.parse_args()
 
-    @staticmethod
-    def parse_args():
+    
+    def parse_args(self):
         import argparse
         ap = argparse.ArgumentParser()
         sprogr = subprogram()
@@ -185,14 +225,21 @@ class main_program:
             name=args.create
             sprogr.create_new_req_script(name,sprogr.dir_basic)
         
-
+    
+    def installation(self,mode : Mode = Mode.NONE):
+        if mode in [Mode.ASK,Mode.NONE]:
+            pass
+            
     
 if __name__=="__main__":
     try:
+
         log.debug('starting main')
-        main_program.main()
+        main_program().main()
         log.debug('exit main')
+
     except Exception as e:
+
         log.error(e)
         print(e)
 
