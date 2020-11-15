@@ -1,6 +1,7 @@
 #!/bin/python3
 
-a = {
-    'a':'1',
-    'b':'2'
-}
+a =[1]
+def foo(s):
+    s[0]=3
+foo(a)
+print(a)

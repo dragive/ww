@@ -7,7 +7,8 @@ import json
 from enum import Enum
 logging.basicConfig(filename='main.log', filemode='w',level=logging.DEBUG,format='%(asctime)s -- %(name)s -- %(levelname)s >> %(message)s')
 log = logging.getLogger(f'aa')
-settings = {}
+global settings 
+settings = dict()
 
 class Mode(Enum):
     NONE = None
@@ -46,12 +47,11 @@ class file_management:
             raise ex
         return val
 
-    def writefile(self,value:str):
-        #TODO
-        pass
+    def writefile(self,value:str)-> str:
+        return ''
 
-    def is_existing(self,localization : str,name_of_file : str)-> bool:
-        return os.path.exists(f'{localization}{name_of_file}')
+    def is_existing(self,path : str,name_of_file : str)-> bool:
+        return os.path.exists(f'{path}/{name_of_file}')
     
     def is_dir(self,path:str,name:str)-> bool:
         return (self.is_existing(path,name) and os.path.isdir(f'{path}/{name}'))
@@ -64,9 +64,8 @@ class Settings:
     def __init__(self):
         log.debug(f'settings init')
         global settings
-        settings = self.load_settings()
-        self.file_name='settings.json'
-
+        self.load_settings()
+        log.debug(f"Settings: {settings}")
         self.fm = file_management()
 
     def load_settings(self):
@@ -76,7 +75,9 @@ class Settings:
         self.default_settings={
             'basic_settings' : '.aa_settings',
             'file_name' : 'settings.json',
-            'dir_basic' : '/bin/'
+            'dir_basic' : '/bin/',
+            'dir_scripts': '/bin/.aa_scripts/',
+            'name_of_this_program' : 'aa'
         }
         temp_settings={}
 
@@ -101,7 +102,7 @@ class Settings:
         else:
             for s in temp_settings:
                 self.default_settings[s] = temp_settings[s]
-
+        settings = self.default_settings
 
     def dump_settings_to_file(self,name:str):
         global settings
@@ -110,11 +111,10 @@ class Settings:
             raise Exception("wrong name of file to dump settings")
         
         self.fm.writefile( json.dumps(settings))
-
-            
+      
     def load_settings_from_file(self,name:str) -> dict:
         try:
-            value=self.fm.readfile(name)
+            value=file_management.readfile(name)
         except Exception as ex:
             log.info(ex)
             raise ex
@@ -127,18 +127,18 @@ class Settings:
 class subprogram:
     def __init__(self):
         global settings
+        
         log.debug('init subprogram')
-        self.s = Settings()
-        self.dir_basic = settings['dir_basic']
-        self.dir_scripts=f'{self.dir_basic}/skrypty/'
+
         self.name_of_program = 'aa'
-        self.template_req='\n'.join(['#!/usr/bin/python3','#import os,sys',f'''os.system('{self.dir_basic}{self.name_of_program} -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
+        self.template_req='\n'.join(['#!/usr/bin/python3','#import os,sys',f'''os.system('{settings['dir_basic']}{settings['name_of_this_program']} -r '+str(sys.argv[0].split('/')[-1:][0])+' '+' '.join(sys.argv[1:]))'''])
         self.template_example='\n'.join(['#!/usr/bin/python3','#place here python code'])
 
-    def run(self,name : str):
+    def run_script(self,name : str):
+        global settings
         try:
-            log.info(f'try to run {name} script at {self.dir_scripts}')
-            self.execute_system_cmd([f'{self.dir_scripts}./{name}'])
+            log.info(f'try to run {name} script at {settings["dir_scripts"]}')
+            self.execute_system_cmd([f'{settings["dir_scripts"]}./{name}'])
         except Exception as ex:
             log.error(ex)
             raise ex
@@ -173,7 +173,7 @@ class subprogram:
                 raise ex
 
     def create_new_req_script(self,name:str,path:str):
-        self.create_file(name,self.dir_basic)
+        self.create_file(name,path)
 
         with open(f'{path}{name}', 'w') as file:
             file.write(self.template_req) 
@@ -188,15 +188,14 @@ class subprogram:
             log.error(f'execute system cmd error : {ex}')
             raise ex
     
-
 class main_program:
     def __init__(self):
         self.st=Settings()
+
     def main(self):
         log.debug(f'started main at main_program')
+        self.settings = Settings()
         self.parse_args()
-
-    
     def parse_args(self):
         import argparse
         ap = argparse.ArgumentParser()
@@ -204,11 +203,11 @@ class main_program:
         
         ap.add_argument(
             '-n','--create', type=str, required=False,
-            help="create new script", default=''
+            help="create new script", default=None
         )
         ap.add_argument(
-            '-r','--run', type=str, required=False, dest = "name_of_program",
-            help="run specyfied script", default=''
+            '-r','--run', type=str, required=False, dest = "script",
+            help="run specyfied script", default=None
         )
         ap.add_argument(
             '--install', required=False, action='store_true',
@@ -217,30 +216,39 @@ class main_program:
 
         log.debug('parsing args')
         args=ap.parse_args()
+        log.debug(f'{args}')
 
-        if not args.run is None:
-            sprogr.run(args.run)
+        if not args.script is None:
+            sprogr.run_script(args.script)
 
         elif not args.create is None:
             name=args.create
-            sprogr.create_new_req_script(name,sprogr.dir_basic)
-        
-    
+            sprogr.create_new_req_script(name,settings['dir_scripts'])
+        elif not args.install is None:
+            log.debug(f'args.install')
+            self.installation(Mode.ASK)
+           
     def installation(self,mode : Mode = Mode.NONE):
+        global settings
+        installation_summary = f'''
+    Instalation will place instance of this program at: {settings['dir_basic']}
+    Program will be named: {settings['name_of_this_program']}
+    Scripts folder will be: {settings['dir_scripts']}'''
+        
         if mode in [Mode.ASK,Mode.NONE]:
-            pass
-            
-    
+            print(installation_summary)
+              
 if __name__=="__main__":
     try:
 
         log.debug('starting main')
-        main_program().main()
+        m=main_program()
+        m.main()
         log.debug('exit main')
 
     except Exception as e:
 
-        log.error(e)
+        log.exception(e)
         print(e)
-
+        #raise e
 
